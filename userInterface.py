@@ -150,8 +150,9 @@ class nge_interface(ttk.Frame):
     def update_character_image(self):
         imageHeader = bytearray('P6\n8 8\n3\n', 'utf-8')
         imagePixels = bytearray(192)
+        print("character data: "+str(self.current_char.data))
         for pos, pixel in enumerate(self.current_char.data):
-            print(self.current_char.data)
+            #print(self.current_char.data)
             imagePixels[pos*3] = imagePixels[pos*3+1] = imagePixels[pos*3+2] = pixel
         image = PhotoImage(name = self.current_char.obj_num, data = bytes(imageHeader+imagePixels), format = "PPM")
         image = image.zoom(4, 4)
@@ -159,7 +160,7 @@ class nge_interface(ttk.Frame):
         self.sheet_display.delete(self.current_char.obj_num + 1)
         xCoord = self.sheet_display.itemcget(self.current_char.obj_num + 1, "x")
         yCoord = self.sheet_display.itemcget(self.current_char.obj_num + 1, "y")
-        print(xCoord, yCoord)
+        print("coordinates: "+str(xCoord)+" "+str(yCoord))
         self.sheet_display.create_image(self.sheet_display.canvasx(xCoord), self.sheet_display.canvasy(yCoord), image=image)
         
 
@@ -259,9 +260,10 @@ class nge_interface(ttk.Frame):
         click_y = self.tile_display.canvasy(event.y)
         clicked_rectangle = self.tile_display.find_closest(click_x, click_y)
         if self.current_tool == self.Pencil:
+            print("Pencil tool used")
             color = self.current_color
             self.tile_display.itemconfigure(clicked_rectangle, fill = self.current_color)
-            print(clicked_rectangle)
+            print("clicked rectangle: "+str(clicked_rectangle))
             self.current_char.data[clicked_rectangle[0] - 1] = COLOR_DICT[self.current_color]
             self.update_character_image()
         if self.current_tool == self.Eraser:
@@ -312,7 +314,7 @@ class nge_interface(ttk.Frame):
         self.input_name = StringVar()
         widget_name = event.widget._name
         if widget_name == "add_sheet" and not self.the_librarian.request_current_book:
-            messagebox.showerror("No Books", "There are no books available to add a sheet too! Open a file or add a book!")
+            messagebox.showerror("No Books", "There are no books available to add a sheet to! Open a file or add a book!")
         
         self.name_dialog = Toplevel(width = 512, height = 256, padx = 32, pady = 32)
         self.instructions_label = ttk.Label(self.name_dialog)
