@@ -38,6 +38,3 @@ def character_to_hex(character):
 def convert_bin_string_to_hexit(hexit):
     hexit = hex(int(hexit, 2))[2]
     return hexit
-
-character = [2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 2, 2, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2]
-character_to_hex(character)

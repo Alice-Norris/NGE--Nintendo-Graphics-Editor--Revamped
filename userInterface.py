@@ -1,10 +1,9 @@
-from nge_functions import character_to_hex, character_row_to_hex, createCharacterImage #import functions from nge
+from nge_functions import character_to_hex, character_row_to_hex, create_character_image, image_coordinates #import functions from nge
 from nge_const import NGE_BLACK, NGE_DK_GRAY, NGE_LT_GRAY, NGE_WHITE, COLOR_DICT, REVERSE_COLOR_DICT
 from nge_files import write_file_data, read_file_data, nge_new, nge_open, nge_save
 from tkinter import Menu, Canvas, Text, BitmapImage, PhotoImage, Button, Scrollbar, StringVar, TclError, Toplevel, ACTIVE, filedialog, ttk, messagebox
 from tkinter.constants import *
 from imageCreator import createPPM
-from math import ceil, floor
 from nge_classes import Tool
 from random import randint
 
@@ -14,7 +13,7 @@ class nge_interface(ttk.Frame):
         self.application = NGE
         self.the_librarian = self.application.the_librarian
         nge_new(self.the_librarian)
-        self.current_char = 0
+        self.current_char = self.the_librarian.request_char_list()[0]
         self.file_directory = None
         self.filename = None
         self.saveable = False
@@ -49,6 +48,7 @@ class nge_interface(ttk.Frame):
         self.current_tool = self.Select
         self.current_color = NGE_WHITE
         self.character_images = []
+
         #Creates different areas of the GUI
         self.organization_frames()
         self.sheet_area()    #populates sheet frame
@@ -58,8 +58,6 @@ class nge_interface(ttk.Frame):
         self.tree_area()     #populate tree area
         self.text_area()
 
-        #create grids in sheet and character canvases
-        self.create_canvas_grid(self.tile_display)
     ###################
     ###GUI FUNCTIONS###
     ###################
@@ -67,25 +65,10 @@ class nge_interface(ttk.Frame):
     #highlights text in text area to show hex code of current character
     def highlight_text(self):
         self.hex_display.tag_delete('current_char')
-        current_char_num = int(self.active_char_num.get())
+        current_char_num = self.current_char.obj_num
         self.hex_display.tag_add('current_char', str(current_char_num + 2) + '.0', str(current_char_num + 2) + '.53')
         self.hex_display.tag_config('current_char', background = '#c0c0c0')
 
-
-    def create_canvas_grid(self, canvas):
-        row = 0
-        column = 0
-        height = int(canvas.cget('height'))
-        width = int(canvas.cget('width'))
-        canvas.create_line(width, 0, width, height+1)
-        while (column <= floor(width / 33)):
-            canvas.create_line(row*33, 0, row*33, height)
-            row += 1
-            if (row == floor(width / 33)):
-                canvas.create_line(0, column * 33, width, column * 33)
-                row= 0
-                column += 1
-        
     def text_area_setup(self):
         text_area_width = 53
         hex_loc = 0
@@ -95,7 +78,7 @@ class nge_interface(ttk.Frame):
             header += "  " + hex(hex_loc + 1)[2:4]
             hex_loc += 1
         self.hex_display.insert('1.0', header + '\n')
-        for character in self.current_sheet.char_list:
+        for character in self.the_librarian.request_char_list():
             hex_line = ""
             line_index = 5
             byte_num = 0
@@ -126,32 +109,25 @@ class nge_interface(ttk.Frame):
                 row = 0
                 column += 1
 
-    def create_character_images(self):
+    def create_sheet_display_images(self):
+        imageHeader = bytearray("P6\n8 8\n3\n", "utf-8")
         for character in self.the_librarian.request_char_list():
-            for pos, pixel in enumerate(character.data):
-                character.data[pos] = randint(0, 3)
-        for character in self.the_librarian.request_char_list():
-            imageHeader = bytearray("P6\n8 8\n3\n", "utf-8")
+            char_num = character.obj_num
             imagePixels = bytearray(192)
             for pos, pixel in enumerate(character.data):
                 imagePixels[pos*3] = imagePixels[pos*3+1] = imagePixels[pos*3+2] = pixel
-            image = PhotoImage(name = character.obj_num, data = bytes(imageHeader + imagePixels), format = "PPM")
-            image = image.zoom(4, 4)
+            image = PhotoImage(name = char_num, data = bytes(imageHeader + imagePixels), format = "PPM").zoom(4, 4)
             self.character_images.append(image)
-
-    def create_sheet_display_images(self):
-        self.create_character_images()
-        for pos, image in enumerate(self.character_images):
-            char_num = pos
-            xCoord = floor(char_num % 16) * 33
-            yCoord = floor(char_num / 16) * 33  
-            self.sheet_display.create_image(self.sheet_display.canvasx(xCoord), self.sheet_display.canvasy(yCoord), image=image, anchor = 'nw')
-            
+            coords = image_coordinates(char_num)
+            currImage = self.sheet_display.create_image(coords[0], coords[1], image=image, anchor = 'nw', tags = str(char_num))
+     
     def update_character_image(self):
+        char_num = self.current_char.obj_num
         imageHeader = bytearray('P6\n8 8\n3\n', 'utf-8')
         imagePixels = bytearray(192)
         print("character data: "+str(self.current_char.data))
         for pos, pixel in enumerate(self.current_char.data):
+<<<<<<< Updated upstream
             #print(self.current_char.data)
             imagePixels[pos*3] = imagePixels[pos*3+1] = imagePixels[pos*3+2] = pixel
         image = PhotoImage(name = self.current_char.obj_num, data = bytes(imageHeader+imagePixels), format = "PPM")
@@ -163,6 +139,14 @@ class nge_interface(ttk.Frame):
         print("coordinates: "+str(xCoord)+" "+str(yCoord))
         self.sheet_display.create_image(self.sheet_display.canvasx(xCoord), self.sheet_display.canvasy(yCoord), image=image)
         
+=======
+            for i in range(3):
+                imagePixels[pos*3 + i] = pixel
+        self.character_images[char_num] = PhotoImage(name = char_num, data = bytes(imageHeader+imagePixels), format = "PPM").zoom(4, 4)
+        self.sheet_display.delete(self.sheet_display.find_withtag(str(char_num)))
+        coords = image_coordinates(char_num)
+        self.sheet_display.create_image(self.sheet_display.canvasx(coords[0]), self.sheet_display.canvasy(coords[1]), image = self.character_images[char_num], anchor = 'nw', tags = str(char_num))
+>>>>>>> Stashed changes
 
     def update_tile_display_pixels(self):
         if(self.current_char):
@@ -205,8 +189,7 @@ class nge_interface(ttk.Frame):
         self.active_book.set(book_name)
         if sheet_name:
             self.current_sheet = self.the_librarian.request_sheet(sheet_name)
-            self.current_char = self.the_librarian.request_char_list[0]
-            print(self.current_char)
+            self.current_char = self.the_librarian.request_char_list()[0]
             self.active_sheet.set(sheet_name)
             self.text_area_setup()
         self.update_tile_display_pixels()
@@ -219,7 +202,6 @@ class nge_interface(ttk.Frame):
     #     if self.filename:
     #         self.file_menu.add_command(label = 'Save')
     #     elif not self.filename:
-    #         print(event.widget.dir())
     #         file_name_and_dir = ''
     #     if action == 'open':
     #         filedialog.askopenfilename            
@@ -228,7 +210,6 @@ class nge_interface(ttk.Frame):
     #     elif action == 'save_as':
     #         file_name_and_dir = filedialog.asksaveasfilename(defaultextension = '.nge', filetypes = [("NGE file", "*.nge")])
         
-        # print(file_name_and_dir)
         # last_slash = file_name_and_dir.rfind("/")
         # self.filename = file_name_and_dir[last_slash+1:]
         # self.file_directory = file_name_and_dir[0:last_slash]
@@ -263,7 +244,10 @@ class nge_interface(ttk.Frame):
             print("Pencil tool used")
             color = self.current_color
             self.tile_display.itemconfigure(clicked_rectangle, fill = self.current_color)
+<<<<<<< Updated upstream
             print("clicked rectangle: "+str(clicked_rectangle))
+=======
+>>>>>>> Stashed changes
             self.current_char.data[clicked_rectangle[0] - 1] = COLOR_DICT[self.current_color]
             self.update_character_image()
         if self.current_tool == self.Eraser:
@@ -275,16 +259,17 @@ class nge_interface(ttk.Frame):
     def sheet_display_clicked(self, event):
         click_x = self.sheet_display.canvasx(event.x)
         click_y = self.sheet_display.canvasy(event.y)
-        character_number = floor(click_x / 33) + floor(click_y / 33)*16
-        self.current_char = self.the_librarian.request_char_list()[character_number]
+        object_id = self.sheet_display.find_closest(click_x, click_y)[0]
+        character_number = self.sheet_display.gettags(object_id)[0]
+        self.current_char = self.the_librarian.request_char_list()[int(character_number)]
         self.active_char.set(self.current_char.name)
         self.active_char_num.set(self.current_char.obj_num)
-        self.tile_display_label.config(text = "Object Number: " + str(character_number))
-        self.hex_display.see(str(character_number + 2) + '.0')
+        self.tile_display_label.config(text = "Object Number: " + character_number)
+        self.hex_display.see(str(self.current_char.obj_num + 2) + '.0')
         self.highlight_text()
         self.update_tile_display_pixels()
-        tile_display_string = "Object " + str(character_number) + ": "
-        self.tile_display_label.config(text = tile_display_string)
+        #tile_display_string = "Object " + str(character_number) + ": "
+        #self.tile_display_label.config(text = tile_display_string)
 
     def tile_name_enter(self, event):
         self.current_char.name = self.entry_text.get()
@@ -449,9 +434,9 @@ class nge_interface(ttk.Frame):
         self.sheet_frame.grid_rowconfigure(3, weight = 1)
         
         self.sheet_display = Canvas(self.sheet_frame, 
-                                    height=264, 
-                                    width=528, 
-                                    bg='#FFFFFF', 
+                                    height=261, 
+                                    width=525, 
+                                    bg='#000000', 
                                     border=0, 
                                     borderwidth = 0, 
                                     highlightthickness=0, 
@@ -465,7 +450,6 @@ class nge_interface(ttk.Frame):
         self.sheet_display.bind('<ButtonRelease-1>', self.sheet_display_clicked)
         self.sheet_display_label = ttk.Label(self.sheet_frame, text = "Sheet:")
         self.sheet_display_label.grid(row = 2, column = 1, in_ = self.sheet_frame, sticky = E)
-        
         self.sheet_name_box = ttk.Entry(self.sheet_frame, textvariable = self.active_sheet)
         self.sheet_name_box.bind('<Return>', self.tile_name_enter)
         self.sheet_name_box.grid(row = 2, column = 2, in_ = self.sheet_frame, sticky = W)
@@ -484,7 +468,7 @@ class nge_interface(ttk.Frame):
         self.tile_frame.grid_rowconfigure(3, weight = 1)
         
         #create canvas to display tile
-        self.tile_display = Canvas(self.tile_frame, height = 264, width = 264, bg = '#FFFFFF', borderwidth = 0, highlightthickness=0)
+        self.tile_display = Canvas(self.tile_frame, height = 263, width = 263, bg = '#000000', borderwidth = 0, highlightthickness=0)
         self.tile_display.bind('<ButtonRelease-1>', self.tile_display_clicked) #bind canvas to 
         self.tile_display.grid(row = 1, column = 1, columnspan = 2, in_=self.tile_frame, padx = 5, pady = 5, ipadx = 1, ipady = 1)
         self.create_tile_display_pixels()
@@ -564,6 +548,7 @@ class nge_interface(ttk.Frame):
         self.hex_display_scrollbar = Scrollbar(self.text_frame, orient = VERTICAL, command=self.hex_display.yview)
         self.hex_display_scrollbar.grid(row = 0, column = 1, sticky=N+S, in_ = self.text_frame)
         self.hex_display['yscrollcommand'] = self.hex_display_scrollbar.set
+        self.text_area_setup()
 
     def tree_area(self):
         self.tree_area_frame = ttk.LabelFrame(self.bottom_left_frame, labelanchor='s', borderwidth = 2, text = 'Information')

@@ -1,5 +1,6 @@
 from nge_const import NGE_WHITE, NGE_LT_GRAY, NGE_DK_GRAY, NGE_BLACK, COLOR_DICT
 from tkinter import PhotoImage
+from math import floor
 ####                    NGE FUNCTIONS                   ####
 # This section contains the functions that power the NGE   #
 ############################################################
@@ -11,7 +12,6 @@ def character_to_hex(character):
     hexit_2 = ""
     char_hex = ""
     pixel_counter = 0
-    print(character.data)
     for pixel in character.data:
         pixel_counter += 1
         if pixel == 3:
@@ -64,10 +64,14 @@ def character_row_to_hex(character, row_num):
     hex_row = first_byte + second_byte
     char_hex += (hex(int(hex_row, 2))[2:6].zfill(4))
 
-def createCharacterImage(character):
+def create_character_image(character):
     imageData = 'P6\n#wat\n8\n8\n189\n'
     for pixel in character.data:
         imageData +=  ' ' + str(63*pixel)
     imageData += ' '
-    print(imageData)
     return PhotoImage(name='test', data=imageData, format='PPM')
+
+def image_coordinates(obj_num):
+        xCoord = floor(obj_num % 16) * 33
+        yCoord = floor(obj_num / 16) * 33
+        return (xCoord, yCoord)
