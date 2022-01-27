@@ -127,26 +127,13 @@ class nge_interface(ttk.Frame):
         imagePixels = bytearray(192)
         print("character data: "+str(self.current_char.data))
         for pos, pixel in enumerate(self.current_char.data):
-<<<<<<< Updated upstream
-            #print(self.current_char.data)
-            imagePixels[pos*3] = imagePixels[pos*3+1] = imagePixels[pos*3+2] = pixel
-        image = PhotoImage(name = self.current_char.obj_num, data = bytes(imageHeader+imagePixels), format = "PPM")
-        image = image.zoom(4, 4)
-        self.character_images[self.current_char.obj_num] = image
-        self.sheet_display.delete(self.current_char.obj_num + 1)
-        xCoord = self.sheet_display.itemcget(self.current_char.obj_num + 1, "x")
-        yCoord = self.sheet_display.itemcget(self.current_char.obj_num + 1, "y")
-        print("coordinates: "+str(xCoord)+" "+str(yCoord))
-        self.sheet_display.create_image(self.sheet_display.canvasx(xCoord), self.sheet_display.canvasy(yCoord), image=image)
-        
-=======
             for i in range(3):
                 imagePixels[pos*3 + i] = pixel
         self.character_images[char_num] = PhotoImage(name = char_num, data = bytes(imageHeader+imagePixels), format = "PPM").zoom(4, 4)
-        self.sheet_display.delete(self.sheet_display.find_withtag(str(char_num)))
+        
         coords = image_coordinates(char_num)
+        self.sheet_display.delete(self.sheet_display.find_closest(coords[0], coords[1]))
         self.sheet_display.create_image(self.sheet_display.canvasx(coords[0]), self.sheet_display.canvasy(coords[1]), image = self.character_images[char_num], anchor = 'nw', tags = str(char_num))
->>>>>>> Stashed changes
 
     def update_tile_display_pixels(self):
         if(self.current_char):
@@ -244,10 +231,6 @@ class nge_interface(ttk.Frame):
             print("Pencil tool used")
             color = self.current_color
             self.tile_display.itemconfigure(clicked_rectangle, fill = self.current_color)
-<<<<<<< Updated upstream
-            print("clicked rectangle: "+str(clicked_rectangle))
-=======
->>>>>>> Stashed changes
             self.current_char.data[clicked_rectangle[0] - 1] = COLOR_DICT[self.current_color]
             self.update_character_image()
         if self.current_tool == self.Eraser:
